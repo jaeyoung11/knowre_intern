@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<title> Coffee Time Matching</title>
+		<script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+		<script src="http://www.jsviews.com/download/jsrender.min.js"></script>
+		<script src="/coffeetime.js"></script>
+		<script src="/matching.js"></script>
+		<link rel="stylesheet" type="text/css" href="/coffeetime.css" />
+	</head>
+	<body>
+		<img src="/img/CoffeeTime.jpg"/>	
+		<section id="Main">
+		</section>
+		
+		<script>
+			$(document).ready(function() {
+				window.coffeeTime = new CoffeeTime($("#Main"));
+			});
+		</script>
+
+		<script type="text/x-jsrender" id="MenuPage">
+			<div class = "mainmenu">
+				<button class="emp"> Emp Table </button>
+				<button class="dept"> Dept Table </button>
+				<button class="matching"> Matching Table </button>
+				<button class="gomatching"> Go Matching! </button>
+			</div>
+		</script>
+
+
+		<script type="text/x-jsrender" id="MatchingPage">
+			<div class = "matchingmenu">
+				<button class="creatematching"> Create {{:turn}}th Matching! </button>
+			</div>
+		</script>
+
+		<script type="text/x-jsrender" id="TmplEmpList">
+			<div class="emplist">
+				<table>
+					<thead>
+						<th> Empno </th>
+						<th> Frist Name </th>
+						<th> Last Name </th>
+						<th> Deptno </th>
+						<th> Del </th>
+					</thead>
+					<tbody>
+						{{for data}}
+						<tr>
+							<td> {{:empno}} </td>
+							<td> {{:firstname}} </td>
+							<td> {{:lastname}} </td>
+							<td> {{:deptno}} </td>
+							<td> <button id={{:empno}}> X </button> </td>
+						</tr>
+						{{/for}}
+					</tbody>
+				</table>
+				<button class="goempcreate"> Create Emp </button>
+			</div>
+		</script>
+
+		<script type="text/x-jsrender" id="TmplEmpCreate">
+			<div class="empcreatemenu">
+				First Name: <input class="empfirstname" type="text" value="" />
+				Last Name: <input class="emplastname" type="text" value="" />
+				Dept: <select class="empdeptno">
+					{{for data}}
+					<option value={{:deptname}}> {{:deptname}} </option>
+					{{/for}}
+				</select>
+				<div><button class="empcreate"> Create Emp </button></div>
+			</div>
+		</script>
+
+		<script type="text/x-jsrender" id="TmplDeptList">
+			<div class="deptlist">
+				<table>
+					<thead>
+						<th> Deptno </th>
+						<th> Dept Name </th>
+					</thead>
+					<tbody>
+						{{for data}}
+						<tr>
+							<td> {{:deptno}} </td>
+							<td> {{:deptname}} </td>
+						</tr>
+						{{/for}}
+					</tbody>
+				</table>
+				<button class="godeptcreate"> Create Dept </button>
+			</div>
+		</script>
+
+		<script type="text/x-jsrender" id="TmplDeptCreate">
+			<div class="deptcreatemenu">
+				Dept Name: <input class="deptdeptname" type="text" value="" />
+				<div><button class="deptcreate"> Create Dept </button></div>
+			</div>
+		</script>
+
+		<script type="text/x-jsrender" id="TmplMatchingList">
+			<div class="matchinglist">
+
+				<table>
+					<thead>
+						<th> Matching No </th>
+						<th> Emp1 </th>
+						<th> First Name </th>
+						<th> Last Name </th>
+						<th> Dept </th>
+						<th> Emp2 </th>
+						<th> First Name </th>
+						<th> Last Name </th>
+						<th> Dept </th>						
+					</thead>
+					<tbody>
+						{{for data}}
+						<tr>
+							<td> {{:matchingno}} </td>
+							<td> {{:emp1_no}} </td>
+							<td> {{:emp1_fn}} </td>
+							<td> {{:emp1_ln}} </td>
+							<td> {{:emp1_dn}} </td>
+							<td> {{:emp2_no}} </td>
+							<td> {{:emp2_fn}} </td>
+							<td> {{:emp2_ln}} </td>
+							<td> {{:emp2_dn}} </td>
+						</tr>
+						{{/for}}
+					</tbody>
+				</table>
+			</div>
+		</script>
+
+	</body>
+</html>

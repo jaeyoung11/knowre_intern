@@ -1,0 +1,51 @@
+﻿body {
+	margin:0;
+	padding:0;
+	font:12px/15px "Helvetica Neue",Arial, Helvetica, sans-serif;
+	color: #555;
+	text-align:center;
+}
+
+#Main {min-width:700px; margin-top: 0px;}
+
+.mainmenu button, .matchingmenu button, .goempcreate, .godeptcreate {
+	margin-top: 25px;
+	margin-bottom: 50px;
+	border-radius: 15px;
+	color: #ffffff;
+	font-size: 15px;
+	background: #644C37;
+	padding: 10px 20px 10px 20px;
+	text-decoration: none;
+}
+
+.mainmenu button:hover, .matchingmenu button:hover, .goempcreate:hover, .godeptcreate:hover {
+	background: #5A352D;
+}
+
+.empcreate, .deptcreate {
+	margin-top: 25px;
+	font-size: 15px;
+}
+
+table {
+	overflow:hidden;
+	border:1px solid #d3d3d3;
+	background:#fefefe;
+	width:60%;
+	max-width: 800px;
+	min-width: 500px;
+	margin:0 auto 0;
+	border-radius:5px;
+	font-weight:bold;
+}
+
+th, td {padding:10px 20px 10px; text-align:center; }
+
+th {padding-top:15px; text-shadow: 1px 1px 1px #bbb; background:#e8eaeb;}
+
+td {border-top:1px solid #e0e0e0; border-right:1px solid #e0e0e0;}
+
+ul li {display: inline-block; margin: 15px 15px 50px 15px; font-size: 18px;}
+
+ul li:hover {text-decoration: underline; font-weight: bold;}
