@@ -306,11 +306,11 @@ _._setMatchingArrayValue = function() {
 		});
 	});
 
-	// increase 3 if two employees already had a coffee time. (3 for each)
+	// increase 5 if two employees already had a coffee time. (5 for each)
 	$.get('/get_matchinglist', function(data){
 		$.each(data, function(i, val){
 			// check quit employees
-			if(that.h[val.emp1_no] !=undefined && that.h[val.emp2_no] !=undefined){
+			if(val.emp1_quit == 0 && val.emp2_quit == 0){
 				that.m[that.h[val.emp1_no]][that.h[val.emp2_no]] += 5;
 				that.m[that.h[val.emp2_no]][that.h[val.emp1_no]] += 5;
 			}

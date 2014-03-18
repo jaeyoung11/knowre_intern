@@ -12,7 +12,8 @@ app.use(orm.express("mysql://root:knowre@localhost:3306/matching", {
 			empno		: Number,
 			firstname	: String,
 			lastname	: String,
-			deptno		: Number
+			deptno		: Number,
+			quit		: Number
 		}, {
 			id 		: 'empno'
 		});
@@ -38,13 +39,7 @@ app.use(orm.express("mysql://root:knowre@localhost:3306/matching" ,{
 			id 		: Number,
 			matchingno	: Number,
 			emp1_no	: Number,
-			emp1_fn	: String,
-			emp1_ln	: String,
-			emp1_dn	: String,
 			emp2_no	: Number,
-			emp2_fn	: String,
-			emp2_ln	: String,
-			emp2_dn	: String
 		}, {
 			id 		: 'id'
 		});
@@ -66,21 +61,31 @@ app.post('/create_emp', function(req, res) {
 	req.models.emp.create([
 		{firstname: req.body.firstname,
 		lastname: req.body.lastname,
-		deptno: req.body.deptno}], 
+		deptno: req.body.deptno,
+		quit: 0}],
 		function(error){
 			res.json(error || false);
 		});
 });
 
 app.get('/read_emp', function(req, res) {
-	req.models.emp.find({}, function(error, data) {
-		res.json(data);
+	req.models.emp.find({quit: 0}, function(error, data) {
+		res.json(
+			data.map( function(v) {
+				req.models.dept.find({deptno: v.deptno}, function(error, data2){
+					v.deptname = data2[0].deptname;
+				});
+				delete v.deptno;
+				delete v.quit;
+				return v;
+			})
+		);
 	});
 });
 
 app.post('/delete_emp', function(req, res) {
 	req.models.emp.get(req.body.empno, function(error, data){
-		data.remove(function(error){
+		data.save({quit: 1}, function(error){
 			res.json(error || false);
 		});
 	});
@@ -109,43 +114,40 @@ app.post('/delete_dept', function(req, res) {
 });
 
 app.post('/create_matching', function(req, res) {
-	var query = req.body.query;
-	query.map( function(v) {
-		if(v.emp1_no != -1){
-			req.models.emp.find({empno: v.emp1_no}, function(erorr,emp1){
-				v.emp1_fn = emp1[0].firstname;
-				v.emp1_ln = emp1[0].lastname;
-				req.models.dept.find({deptno: emp1[0].deptno}, function(error,dept1){
-					v.emp1_dn = dept1[0].deptname;
-				});
-			});
+	req.models.matching.create(
+		req.body.query,
+		function(error){
+			res.json(error || false);
 		}
-
-		if(v.emp2_no != -1){
-			req.models.emp.find({empno: v.emp2_no}, function(erorr,emp2){
-				v.emp2_fn = emp2[0].firstname;
-				v.emp2_ln = emp2[0].lastname;
-				req.models.dept.find({deptno: emp2[0].deptno}, function(error,dept2){
-					v.emp2_dn = dept2[0].deptname;
-				});
-			});
-		}
-	})
-
-	setTimeout( function() {
-		req.models.matching.create(
-			req.body.query,
-			function(error){
-				res.json(error || false);
-			}
-		);
-	}, 1000);
-
+	);
 });
 
 app.post('/read_matching', function(req, res) {
 	req.models.matching.find({matchingno: req.body.matchingno}, function(err,data) {
-		res.json(data);
+		res.json(
+			data.map( function(v) {
+				if(v.emp1_no != -1){
+					req.models.emp.find({empno: v.emp1_no}, function(erorr,emp1){
+						v.emp1_fn = emp1[0].firstname;
+						v.emp1_ln = emp1[0].lastname;
+						req.models.dept.find({deptno: emp1[0].deptno}, function(error,dept1){
+							v.emp1_dn = dept1[0].deptname;
+						});
+					});
+				}
+				if(v.emp2_no != -1){
+					req.models.emp.find({empno: v.emp2_no}, function(erorr,emp2){
+						v.emp2_fn = emp2[0].firstname;
+						v.emp2_ln = emp2[0].lastname;
+						req.models.dept.find({deptno: emp2[0].deptno}, function(error,dept2){
+							v.emp2_dn = dept2[0].deptname;
+						});
+					});
+				}
+				//console.log(v);
+				return v;
+			})
+		);
 	});
 });
 
@@ -200,12 +202,24 @@ app.get('/get_matchinglist', function(req, res) {
 	req.models.matching.find({}, function(err,data) {
 		res.json(
 			data.map( function(v) {
-				delete emp1_fn;
-				delete emp1_ln;
-				delete emp1_dn;
-				delete emp2_fn;
-				delete emp2_ln;
-				delete emp2_dn;
+				if(v.emp1_no != -1){
+					req.models.emp.find({empno: v.emp1_no}, function(erorr,emp1){
+						v.emp1_quit = emp1[0].quit;
+					});
+				}
+				else{
+					v.emp1_quit = -1;
+				}
+
+				if(v.emp2_no != -1){
+					req.models.emp.find({empno: v.emp2_no}, function(erorr,emp2){
+						v.emp2_quit = emp2[0].quit;
+					});
+				}
+				else{
+					v.emp2_quit = -1;
+				}
+
 				return v;
 			})
 		);
