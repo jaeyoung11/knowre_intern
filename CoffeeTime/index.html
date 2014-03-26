@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 	<head>
 		<title> Coffee Time Matching</title>
@@ -12,11 +12,78 @@
 		<img src="/img/CoffeeTime.jpg"/>	
 		<section id="Main">
 		</section>
-		
 		<script>
 			$(document).ready(function() {
 				window.coffeeTime = new CoffeeTime($("#Main"));
+				var data = {html: $(document).find("#Main")[0].innerHTML};
+				history.replaceState(data,'','');
 			});
+		</script>
+
+		<script>
+			$(window).on("popstate", function(e){
+				if(e.originalEvent.state != null){
+					$("#Main").html(e.originalEvent.state.html);
+					console.log(window.location.pathname);
+					switch (window.location.pathname)
+					{
+						case "/":
+							$("#Main").find('.emp').click(function(){
+								window.coffeeTime._renderEmpList('emp');
+							});
+							$("#Main").find('.dept').click(function(){
+								window.coffeeTime._renderDeptList('dept');
+							});
+							$("#Main").find('.matching').click(function(){
+								window.coffeeTime._renderMatchingList(window.coffeeTime.turn,'matching');
+							});	
+							$("#Main").find('.gomatching').click(function(){
+								window.coffeeTime._matchingEmp('gomatching');
+							});						
+							break;
+						case "/emp":
+							window.coffeeTime._bindDelEmpEvent(window.coffeeTime.$dom, 'emp');
+							$("#Main").find('.goempcreate').click(function() {
+								window.coffeeTime._renderEmpCreate('goempcreate');
+							});
+							break;
+						case "/goempcreate":
+							window.coffeeTime._bindClickOnEmpCreate(window.coffeeTime.$dom);
+							break;
+						case "/dept":
+							$("#Main").find('.godeptcreate').click(function() {
+								window.coffeeTime._renderDeptCreate('godeptcreate');
+							});
+							break;
+						case "/deptcreate":
+							window.coffeeTime._bindClickOnDeptCreate(window.coffeeTime.$dom);
+							break;
+						case "/matching":
+							if(window.coffeeTime.turn > 0){
+								$(".matchinglistlink ul li:first-child").click( function() {
+									window.coffeeTime._renderMatchingList(1, 'matching');
+								});
+							};
+							for(var i = 1; i < window.coffeeTime.turn; i++){
+								$(".matchinglistlink ul li:nth-child("+i+")").click( function() {
+									window.coffeeTime._renderMatchingList($(this).index()+1, 'matching');
+								});
+							}
+							break;
+						case "/gomatching":
+							break;
+						default:
+							break;
+					}
+				}
+				else{
+					console.log(window.location.pathname);
+					/*switch(window.location.pathname)
+					{
+					}*/
+				}
+			});
+
 		</script>
 
 		<script type="text/x-jsrender" id="MenuPage">

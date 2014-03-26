@@ -19,20 +19,20 @@ _._showMenuPage = function() {
 	$dom2.appendTo(this.$dom);
 
 	$dom2.find('.emp').click(function(){
-		that._renderEmpList();
+		that._renderEmpList('emp');
 	});
 	$dom2.find('.dept').click(function(){
-		that._renderDeptList();
+		that._renderDeptList('dept');
 	});
 	$dom2.find('.matching').click(function(){
-		that._renderMatchingList(that.turn);
+		that._renderMatchingList(that.turn,'matching');
 	});	
 	$dom2.find('.gomatching').click(function(){
-		that._matchingEmp();
+		that._matchingEmp('gomatching');
 	});
 };
 
-_._matchingEmp = function() {
+_._matchingEmp = function(url) {
 	var that = this;
 
 	$.get('/get_empnum', function(num){
@@ -42,15 +42,18 @@ _._matchingEmp = function() {
 
 		that.$dom.empty();
 		$dom.appendTo(that.$dom);
+		// for back button
+		that._push(url);
 
 		var matching = new Matching(num, that.turn);
 	});
 };
 
-_._renderEmpList = function() {
+_._renderEmpList = function(url) {
 	var that = this;
 
 	$.get('/read_emp', function(data){
+		console.log(data);
 		var $dom = $($("#TmplEmpList").render({
 			data:data
 		}));
@@ -58,31 +61,38 @@ _._renderEmpList = function() {
 		that.$dom.empty();
 		$dom.appendTo(that.$dom);
 
-		that._bindDelEmpEvent($dom);
+		that._bindDelEmpEvent($dom, url);
+		// for back button
+		that._push(url);
+
 		$dom.find('.goempcreate').click(function() {
-			that._renderEmpCreate();
+			that._renderEmpCreate('goempcreate');
 		});
 	});
 };
 
-_._bindDelEmpEvent = function($dom) {
+_._bindDelEmpEvent = function($dom, url) {
 	var that = this;
 	for(var i = 1; i < $dom.find('table')[0].tBodies[0].childElementCount+1; i++){
 		$(that.$dom.find('table tr:nth-child('+i+')')).find('button').click(function() {
+			var that_that = this;
 			var conf = confirm('Do you really want to delete the employee?');
 			if (conf == true){
 				$.post('/delete_emp', {				
 					empno: this.id
 				}, function(data){
 					if(data){alert('Delete Failed');}
-					else{that._showMenuPage();}
+					else{
+						$(that_that).parent().parent().hide();
+						that._replace(url);
+					}
 				});
 			}
 		});
 	}
 };
 
-_._renderEmpCreate = function() {
+_._renderEmpCreate = function(url) {
 	var that = this;
 
 	$.get('/read_dept', function(data){
@@ -94,6 +104,8 @@ _._renderEmpCreate = function() {
 		$dom.appendTo(that.$dom);
 
 		that._bindClickOnEmpCreate($dom);
+		// for back button
+		that._push(url);
 	});
 };
 
@@ -107,12 +119,16 @@ _._bindClickOnEmpCreate = function($dom) {
 			deptno: ($dom.find('.empdeptno')[0].selectedIndex) + 1
 		}, function(data){
 			if(data){alert('Create Failed');}
-			else{that._showMenuPage();}
+			else{
+				that._showMenuPage();
+				// for back button
+				that._push('/');
+			}
 		});
 	});
 };
 
-_._renderDeptList = function() {
+_._renderDeptList = function(url) {
 	var that = this;
 
 	$.get('/read_dept', function(data){
@@ -122,14 +138,15 @@ _._renderDeptList = function() {
 
 		that.$dom.empty();
 		$dom.appendTo(that.$dom);
-
+		// for back button
+		that._push(url);
 		$dom.find('.godeptcreate').click(function() {
-			that._renderDeptCreate();
+			that._renderDeptCreate('godeptcreate');
 		});
 	});
 };
 
-_._renderDeptCreate = function() {
+_._renderDeptCreate = function(url) {
 	var that = this;
 
 	$.get('/read_dept', function(data){
@@ -139,7 +156,8 @@ _._renderDeptCreate = function() {
 
 		that.$dom.empty();
 		$dom.appendTo(that.$dom);
-
+		// for back button
+		that._push(url);
 		that._bindClickOnDeptCreate($dom);
 	});
 };
@@ -152,14 +170,18 @@ _._bindClickOnDeptCreate = function($dom) {
 			deptname: $dom.find('.deptdeptname').val()
 		}, function(data){
 			if(data){alert('Create Failed');}
-			else{that._showMenuPage();}
+			else{
+				that._showMenuPage();
+				// for back button
+				that._push('/');
+			}
 		});
 	});
 };
 
-_._renderMatchingList = function(turn) {
+_._renderMatchingList = function(turn, url) {
 	var that = this;
-	console.log(turn);
+
 	$.post('/read_matching', {matchingno: turn}, function(data){
 		var $dom = $($("#TmplMatchingList").render({
 			data:data
@@ -168,11 +190,14 @@ _._renderMatchingList = function(turn) {
 		that.$dom.empty();
 		$dom.appendTo(that.$dom);
 
-		that._renderMatchingListLink();
+		that._renderMatchingListLink(url);
+
+		// for back button
+		that._push(url+'?matchingno='+turn);
 	});
 };
 
-_._renderMatchingListLink = function() {
+_._renderMatchingListLink = function(url) {
 	var that = this;
 
 	var div = document.createElement('div');
@@ -183,7 +208,7 @@ _._renderMatchingListLink = function() {
 		links.id = "link-"+i;
 		$(links).html(i);
 		$(links).click(function(){
-			that._renderMatchingList($(this).index()+1);
+			that._renderMatchingList($(this).index()+1, url);
 		});
 		$(that.$dom.find('.matchinglistlink ul')).append(links);
 	}
@@ -193,3 +218,13 @@ _._getTurnValue = function() {
 	var that = this;
 	$.get('get_turn', function(data){if(data != null) that.turn = data;});
 };
+
+_._push = function (url) {
+	var data = {html: this.$dom[0].innerHTML};
+	history.pushState(data, '', url);
+}
+
+_._replace = function (url) {
+	var data = {html: this.$dom[0].innerHTML};
+	history.replaceState(data, '', url);
+}

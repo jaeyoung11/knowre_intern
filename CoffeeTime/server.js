@@ -1,6 +1,8 @@
 ﻿var express = require('express');
 var orm = require('orm');
+var async = require('async');
 var app  = express();
+var request;
 
 app.use(express.json());
 app.use(express.urlencoded());
@@ -28,7 +30,8 @@ app.use(orm.express("mysql://root:knowre@localhost:3306/matching" ,{
 			deptname	: String
 		}, {
 			id 		: 'deptno'
-		});
+		});			
+
 		next();
 	}
 }));
@@ -69,19 +72,43 @@ app.post('/create_emp', function(req, res) {
 });
 
 app.get('/read_emp', function(req, res) {
+	request = req;
+	var data2;
+
 	req.models.emp.find({quit: 0}, function(error, data) {
-		res.json(
-			data.map( function(v) {
-				req.models.dept.find({deptno: v.deptno}, function(error, data2){
-					v.deptname = data2[0].deptname;
-				});
-				delete v.deptno;
-				delete v.quit;
-				return v;
-			})
+		async.series(
+			[
+				function(callback) {
+					async.mapSeries(data, finddeptno, function(err, results){
+						data2 = results;
+						callback(null, "");
+					});
+				},
+				function(callback) {
+					res.json(data2);
+					callback(null, "");
+				}
+			],
+			function(error, results) {
+			}
 		);
 	});
 });
+
+var finddeptno = function(v, doneCallback){
+	async.series([
+		function(callback){
+			request.models.dept.find({deptno: v.deptno}, function(error, data){
+				//v.deptname = data[0].deptname;
+				callback(null, data[0].deptname);
+			});
+		}
+	],
+	function(error, results) {
+		v.deptname = results[0];
+		return doneCallback(null, v);
+	});
+};
 
 app.post('/delete_emp', function(req, res) {
 	req.models.emp.get(req.body.empno, function(error, data){
@@ -114,6 +141,7 @@ app.post('/delete_dept', function(req, res) {
 });
 
 app.post('/create_matching', function(req, res) {
+	//console.log(req.body.query);
 	req.models.matching.create(
 		req.body.query,
 		function(error){
@@ -123,33 +151,74 @@ app.post('/create_matching', function(req, res) {
 });
 
 app.post('/read_matching', function(req, res) {
+	request = req;
+	var data2;
+
 	req.models.matching.find({matchingno: req.body.matchingno}, function(err,data) {
-		res.json(
-			data.map( function(v) {
-				if(v.emp1_no != -1){
-					req.models.emp.find({empno: v.emp1_no}, function(erorr,emp1){
-						v.emp1_fn = emp1[0].firstname;
-						v.emp1_ln = emp1[0].lastname;
-						req.models.dept.find({deptno: emp1[0].deptno}, function(error,dept1){
-							v.emp1_dn = dept1[0].deptname;
-						});
+		async.series(
+			[
+				function(callback) {
+					async.mapSeries(data, findempinfo, function(err, results){
+						data2 = results;
+						callback(null, "");
 					});
+				},
+				function(callback) {
+					res.json(data2);
+					callback(null, "");
 				}
-				if(v.emp2_no != -1){
-					req.models.emp.find({empno: v.emp2_no}, function(erorr,emp2){
-						v.emp2_fn = emp2[0].firstname;
-						v.emp2_ln = emp2[0].lastname;
-						req.models.dept.find({deptno: emp2[0].deptno}, function(error,dept2){
-							v.emp2_dn = dept2[0].deptname;
-						});
-					});
-				}
-				//console.log(v);
-				return v;
-			})
+			],
+			function(error, results) {
+			}
 		);
 	});
 });
+
+var findempinfo = function(v, doneCallback){
+	async.series([
+		function(callback){
+			if(v.emp1_no != -1){
+				request.models.emp.find({empno: v.emp1_no}, function(error, emp1){
+					/*
+						req.models.dept.find({deptno: emp1[0].deptno}, function(error,dept1){
+							v.emp1_dn = dept1[0].deptname;
+						});
+					*/	
+					callback(null, emp1[0].firstname, emp1[0].lastname);
+				});
+			}
+			else{
+				callback(null, null);
+			}
+		},
+		function(callback){
+			if(v.emp2_no != -1){
+				request.models.emp.find({empno: v.emp2_no}, function(error, emp2){
+					/*
+						req.models.dept.find({deptno: emp2[0].deptno}, function(error,dept2){
+							v.emp2_dn = dept2[0].deptname;
+						});
+					*/					
+					callback(null, emp2[0].firstname, emp2[0].lastname);
+				});
+			}
+			else{
+				callback(null, null);
+			}			
+		}
+	],
+	function(error, results) {
+		if(results[0 ] != null){
+			v.emp1_fn = results[0][0];
+			v.emp1_ln = results[0][1];
+		}
+		if(results[1] != null){
+			v.emp2_fn = results[1][0];
+			v.emp2_ln = results[1][1];
+		}
+		return doneCallback(null, v);
+	});
+};
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////	To Assist Calculation			//////////////////////
@@ -157,13 +226,13 @@ app.post('/read_matching', function(req, res) {
 
 
 app.get('/get_empnum', function(req, res) {
-	req.models.emp.count({}, function(error, count) {
+	req.models.emp.count({quit: 0}, function(error, count) {
 		res.json(count);
 	});
 });
 
 app.get('/get_emplist', function(req, res) {
-	req.models.emp.find({}, function(erorr,data) {
+	req.models.emp.find({quit: 0}, function(erorr,data) {
 		res.json(
 			data.map( function(v) {
 				return v.empno;
@@ -183,7 +252,7 @@ app.get('/get_deptlist', function(req, res) {
 });
 
 app.post('/get_emplist_withdept', function(req, res) {
-	req.models.emp.find({deptno: req.body.deptno}, function(erorr,data) {
+	req.models.emp.find({deptno: req.body.deptno, quit: 0}, function(erorr,data) {
 		res.json(
 			data.map( function(v) {
 				return v.empno;
@@ -199,29 +268,55 @@ app.get('/get_turn', function(req, res) {
 });
 
 app.get('/get_matchinglist', function(req, res) {
+	request = req;
+	var data2;
+
 	req.models.matching.find({}, function(err,data) {
-		res.json(
-			data.map( function(v) {
-				if(v.emp1_no != -1){
-					req.models.emp.find({empno: v.emp1_no}, function(erorr,emp1){
-						v.emp1_quit = emp1[0].quit;
+		async.series(
+			[
+				function(callback) {
+					async.mapSeries(data, findempquit, function(err, results){
+						data2 = results;
+						callback(null, "");
 					});
+				},
+				function(callback) {
+					res.json(data2);
+					callback(null, "");
 				}
-				else{
-					v.emp1_quit = -1;
-				}
-
-				if(v.emp2_no != -1){
-					req.models.emp.find({empno: v.emp2_no}, function(erorr,emp2){
-						v.emp2_quit = emp2[0].quit;
-					});
-				}
-				else{
-					v.emp2_quit = -1;
-				}
-
-				return v;
-			})
+			],
+			function(error, results) {
+			}
 		);
 	});
 });
+
+var findempquit = function(v, doneCallback){
+	async.series([
+		function(callback){
+			if(v.emp1_no != -1){
+				request.models.emp.find({empno: v.emp1_no}, function(error, emp1){
+					callback(null, emp1[0].quit);
+				});
+			}
+			else{
+				callback(null, -1);
+			}			
+		},
+		function(callback){
+			if(v.emp2_no != -1){
+				request.models.emp.find({empno: v.emp2_no}, function(error, emp2){
+					callback(null, emp2[0].quit);
+				});
+			}
+			else{
+				callback(null, -1);
+			}
+		}
+	],
+	function(error, results) {
+		v.emp1_quit = results[0];
+		v.emp2_quit = results[1];
+		return doneCallback(null, v);
+	});
+};
