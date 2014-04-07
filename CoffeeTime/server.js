@@ -56,6 +56,46 @@ app.get('/', function(req, res) {
 	res.sendfile('index.html');
 });
 
+app.get('/emp', function(req, res) {
+	res.sendfile('index.html');
+});
+
+app.get('/goempcreate', function(req, res) {
+	res.sendfile('index.html');
+});
+
+app.get('/dept', function(req, res) {
+	res.sendfile('index.html');
+});
+
+app.get('/godeptcreate', function(req, res) {
+	res.sendfile('index.html');
+});
+
+app.get('/matching', function(req, res) {
+	var matchingno = req.query.matchingno;
+	if(matchingno === undefined){
+		res.sendfile('index.html');
+	}
+	else{
+		if( !isNaN(matchingno) ) {
+			if( matchingno == parseInt(matchingno) ) {
+				res.sendfile('index.html');
+			}
+			else {res.send(404, 'Not Found');}
+		}
+		else {res.send(404, 'Not Found');}
+	}
+});
+
+app.get('/gomatching', function(req, res) {
+	res.sendfile('index.html');
+});
+
+app.get('/notfound', function(req, res) {
+	res.send(404, 'Not Found');
+});
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////	For Control Tables			//////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,13 +139,13 @@ var finddeptno = function(v, doneCallback){
 	async.series([
 		function(callback){
 			request.models.dept.find({deptno: v.deptno}, function(error, data){
-				//v.deptname = data[0].deptname;
 				callback(null, data[0].deptname);
 			});
 		}
 	],
 	function(error, results) {
 		v.deptname = results[0];
+		delete v.deptno;
 		return doneCallback(null, v);
 	});
 };
@@ -216,6 +256,7 @@ var findempinfo = function(v, doneCallback){
 			v.emp2_fn = results[1][0];
 			v.emp2_ln = results[1][1];
 		}
+		delete v.id;
 		return doneCallback(null, v);
 	});
 };

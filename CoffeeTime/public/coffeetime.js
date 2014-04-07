@@ -53,7 +53,6 @@ _._renderEmpList = function(url) {
 	var that = this;
 
 	$.get('/read_emp', function(data){
-		console.log(data);
 		var $dom = $($("#TmplEmpList").render({
 			data:data
 		}));
@@ -182,7 +181,14 @@ _._bindClickOnDeptCreate = function($dom) {
 _._renderMatchingList = function(turn, url) {
 	var that = this;
 
-	$.post('/read_matching', {matchingno: turn}, function(data){
+	if(turn == null){
+		var matchingno = that.turn;
+	}
+	else {
+		var matchingno = turn;
+	}
+
+	$.post('/read_matching', {matchingno: matchingno}, function(data){
 		var $dom = $($("#TmplMatchingList").render({
 			data:data
 		}));
@@ -193,7 +199,7 @@ _._renderMatchingList = function(turn, url) {
 		that._renderMatchingListLink(url);
 
 		// for back button
-		that._push(url+'?matchingno='+turn);
+		that._push(url+'?matchingno='+matchingno);
 	});
 };
 

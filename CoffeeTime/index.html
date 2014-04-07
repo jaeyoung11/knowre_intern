@@ -78,9 +78,39 @@
 				}
 				else{
 					console.log(window.location.pathname);
-					/*switch(window.location.pathname)
+					switch(window.location.pathname)
 					{
-					}*/
+						case "/emp":
+							window.coffeeTime._renderEmpList('emp');
+							break;
+						case "/goempcreate":
+							window.coffeeTime._renderEmpCreate('goempcreate')
+							break;
+						case "/dept":
+							window.coffeeTime._renderDeptList('dept');
+							break;
+						case "/godeptcreate":
+							window.coffeeTime._renderEmpCreate('goempcreate');
+							break;							
+						case "/matching":
+							var query = (window.location.search).split('?matchingno=');
+							if(query.length == 1){
+								window.coffeeTime._renderMatchingList(null, 'matching');
+							}
+							else {
+								if(!isNaN(query[1])){
+									if(query[1] == parseInt(query[1])){
+										window.coffeeTime._renderMatchingList(query[1],'matching');
+									}
+								}
+							}
+							break;
+						case "/gomatching":
+							window.coffeeTime._matchingEmp('gomatching');
+							break;	
+						default:
+							break; 
+					}
 				}
 			});
 
